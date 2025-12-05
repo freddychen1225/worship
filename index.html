@@ -113,4 +113,352 @@
                 targets: ['七娘媽', '床母', '織女'], 
                 items: ['麻油雞酒', '油飯', '圓仔花', '化妝品 (胭脂/水粉/圓鏡)'], 
                 papers: ['壽金', '刈金', '七娘媽衣 (婆姐衣)', '床母衣'],
-                notes: ['傍晚 (17:00-19:00) 祭拜最佳', '拜完化妝品一半丟高處給神明，一半留給女孩用', '家有16歲子女可做十六
+                notes: ['傍晚 (17:00-19:00) 祭拜最佳', '拜完化妝品一半丟高處給神明，一半留給女孩用', '家有16歲子女可做十六歲成年禮'] 
+            },
+            { 
+                id: 'ghost', 
+                title: '中元普渡', 
+                type: 'yearly', 
+                lunarMonth: 7, 
+                lunarDay: 15, 
+                targets: ['普渡公', '好兄弟'], 
+                items: ['三牲', '臉盆毛巾', '乖乖', '水果'], 
+                papers: ['普渡公金', '更衣 (經衣)', '銀紙 (小銀)'],
+                notes: ['不可說名字', '在戶外拜', '先燒經衣(給好兄弟梳洗)再燒小銀', '避開香蕉李子梨子(招你來)'] 
+            },
+            { 
+                id: 'moon', 
+                title: '中秋節 - 土地公與祖先', 
+                type: 'yearly', 
+                lunarMonth: 8, 
+                lunarDay: 15, 
+                targets: ['土地公', '祖先', '月亮'], 
+                items: ['月餅', '柚子', '麻糬 (黏錢)'], 
+                papers: ['【拜土地公】四色金 (壽金/刈金/福金/大百壽金)', '【拜祖先】刈金 (四方金) + 銀紙 (大銀)'],
+                notes: ['求人緣、求子', '土地公需準備四色金，祖先用刈金與銀紙，不可混用'] 
+            },
+            { 
+                id: 'double9', 
+                title: '重陽節 - 敬老祭祖', 
+                type: 'yearly', 
+                lunarMonth: 9, 
+                lunarDay: 9, 
+                targets: ['祖先', '地基主'], 
+                items: ['重陽糕', '菊花酒', '三牲'], 
+                papers: ['刈金', '大銀', '小銀'],
+                notes: ['祭祖四大節日之一'] 
+            },
+            { 
+                id: 'm1_15', 
+                title: '初一/十五 - 拜神祭祖', 
+                type: 'monthly', 
+                days: [1, 15], 
+                targets: ['神明', '祖先'], 
+                items: ['水果 (單數)', '清茶'], 
+                papers: ['【神明】壽金/天公金', '【祖先】刈金/銀紙'],
+                notes: ['上午吉時最佳'] 
+            },
+            { 
+                id: 'm2_16', 
+                title: '初二/十六 - 做牙 (拜土地公)', 
+                type: 'monthly', 
+                days: [2, 16], 
+                targets: ['土地公'], 
+                items: ['麻糬', '花生', '酒'], 
+                papers: ['四色金 (壽金/刈金/福金/大百壽金)'],
+                notes: ['頭牙(2/2)', '尾牙(12/16)需隆重', '福金是土地公專用金紙'] 
+            }
+        ];
+
+        // ==========================================
+        // 2. 核心邏輯：日期計算
+        // ==========================================
+        const getNextWorshipDate = (event) => {
+            const now = new Date();
+            const Lunar = window.Lunar; // 從全域變數獲取
+            let candidates = [];
+
+            if (event.type === 'monthly') {
+                // 往後找 2 個月內的初一十五/初二十六
+                const todayLunar = Lunar.fromDate(now);
+                const nextMonthLunar = todayLunar.next(35); 
+
+                event.days.forEach(day => {
+                    [todayLunar, nextMonthLunar].forEach(baseLunar => {
+                        try {
+                            let targetLunar = Lunar.fromYmd(baseLunar.getYear(), baseLunar.getMonth(), day);
+                            const solar = targetLunar.getSolar();
+                            const dateObj = new Date(solar.getYear(), solar.getMonth() - 1, solar.getDay());
+                            if (dateObj >= now) { 
+                                candidates.push({ date: dateObj, display: `農曆 ${targetLunar.getMonth()}月${targetLunar.getDay()}日` });
+                            }
+                        } catch(e) {}
+                    });
+                });
+            } 
+            else if (event.type === 'yearly') {
+                const currentYear = now.getFullYear();
+                [currentYear, currentYear + 1].forEach(year => {
+                    let tempLunar = Lunar.fromDate(new Date(year, 5, 1));
+                    let targetLunarYear = tempLunar.getYear();
+                    try {
+                        let lunarDate = Lunar.fromYmd(targetLunarYear, event.lunarMonth, event.lunarDay);
+                        let solar = lunarDate.getSolar();
+                        let dateObj = new Date(solar.getYear(), solar.getMonth() - 1, solar.getDay());
+                        if (dateObj >= now) {
+                             candidates.push({ date: dateObj, display: `農曆 ${event.lunarMonth}月${event.lunarDay}日` });
+                        }
+                    } catch (e) {
+                        if (event.lunarDay === 30) {
+                             try {
+                                let lunarDate = Lunar.fromYmd(targetLunarYear, 12, 29);
+                                // 簡化邏輯：若無30，則29為除夕
+                             } catch(ex){}
+                        }
+                    }
+                });
+            }
+            else if (event.type === 'solar_term') {
+                 const currentYear = now.getFullYear();
+                 [currentYear, currentYear + 1].forEach(year => {
+                     let d = new Date(year, 3, 5); // 暫定清明為4/5
+                     if (d >= now) {
+                         candidates.push({ date: d, display: '節氣：清明' });
+                     }
+                 });
+            }
+
+            candidates.sort((a, b) => a.date - b.date);
+            return candidates.length > 0 ? candidates[0] : null;
+        };
+
+        const getDaysUntil = (targetDate) => {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const target = new Date(targetDate);
+            target.setHours(0, 0, 0, 0);
+            const diffTime = target - now; 
+            if (diffTime < 0) return 0; 
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        };
+
+        // ==========================================
+        // 3. V2 功能：加入 Google Calendar
+        // ==========================================
+        const addToGoogleCalendar = (event) => {
+            if (!event.nextDate) return;
+
+            const paperText = event.papers ? `\n\n【紙錢準備】\n${event.papers.join('\n')}` : '';
+            
+            const title = encodeURIComponent(`拜拜提醒：${event.title}`);
+            const details = encodeURIComponent(`【準備物品】\n${event.items.join('、')}${paperText}\n\n【注意事項】\n${event.notes.join('、')}`);
+            const location = encodeURIComponent("家中或廟宇");
+            
+            const year = event.nextDate.getFullYear();
+            const month = String(event.nextDate.getMonth() + 1).padStart(2, '0');
+            const day = String(event.nextDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}${month}${day}`;
+            
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}&location=${location}`;
+            
+            window.open(url, '_blank');
+        };
+
+        // ==========================================
+        // 4. 主程式 UI
+        // ==========================================
+        function App() {
+            const [events, setEvents] = useState([]);
+            const [selectedEvent, setSelectedEvent] = useState(null);
+
+            useEffect(() => {
+                const calculatedEvents = WORSHIP_DATA.map(event => {
+                    const nextDateInfo = getNextWorshipDate(event);
+                    return {
+                        ...event,
+                        nextDate: nextDateInfo ? nextDateInfo.date : null,
+                        nextDateDisplay: nextDateInfo ? nextDateInfo.display : '',
+                        daysUntil: nextDateInfo ? getDaysUntil(nextDateInfo.date) : 999
+                    };
+                });
+                calculatedEvents.sort((a, b) => a.daysUntil - b.daysUntil);
+                setEvents(calculatedEvents);
+            }, []);
+
+            return (
+                <div className="min-h-screen pb-12 font-sans">
+                    <header className="bg-red-700 text-white p-4 sticky top-0 z-10 shadow-md">
+                        <div className="max-w-md mx-auto flex justify-between items-center">
+                            <h1 className="text-xl font-bold flex items-center gap-2">
+                                <Icons.Calendar /> 拜拜小幫手 V2
+                            </h1>
+                            <span className="text-sm opacity-80">
+                                {new Date().toLocaleDateString()}
+                            </span>
+                        </div>
+                    </header>
+
+                    <main className="max-w-md mx-auto p-4 space-y-6">
+                        
+                        {/* 重點卡片 */}
+                        {events.length > 0 && (
+                            <div className="bg-white rounded-xl shadow-lg overflow-hidden border-l-4 border-red-600 transform transition hover:scale-[1.02] duration-200">
+                                <div className="p-5">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">最近一次</span>
+                                        <span className="text-red-600 font-bold text-3xl">
+                                            {events[0].daysUntil === 0 ? '今天' : `${events[0].daysUntil} 天後`}
+                                        </span>
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-1">{events[0].title}</h2>
+                                    <p className="text-stone-500 font-medium">
+                                        {events[0].nextDate?.toLocaleDateString()} ({events[0].nextDateDisplay})
+                                    </p>
+                                    
+                                    <div className="mt-4 grid grid-cols-2 gap-3">
+                                        <button 
+                                            onClick={() => setSelectedEvent(events[0])}
+                                            className="flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 rounded-lg hover:bg-red-700 active:bg-red-800 transition font-medium shadow-sm"
+                                        >
+                                            <Icons.Info /> 查看細節
+                                        </button>
+                                        <button 
+                                            onClick={() => addToGoogleCalendar(events[0])}
+                                            className="flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 py-2.5 rounded-lg hover:bg-blue-100 transition font-medium shadow-sm"
+                                        >
+                                            <Icons.Bell /> 行事曆
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 列表區 */}
+                        <div>
+                            <h3 className="text-lg font-bold mb-3 text-stone-700 pl-1 border-l-4 border-stone-300 leading-none ml-1">接下來的日子</h3>
+                            <div className="space-y-3">
+                                {events.slice(1).map(event => (
+                                    <div 
+                                        key={event.id} 
+                                        onClick={() => setSelectedEvent(event)}
+                                        className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer flex justify-between items-center active:bg-stone-50 border border-transparent hover:border-red-100"
+                                    >
+                                        <div>
+                                            <h4 className="font-bold text-gray-800">{event.title}</h4>
+                                            <p className="text-sm text-stone-500 mt-1">
+                                                {event.nextDate?.toLocaleDateString()} <span className="text-xs bg-stone-100 px-1.5 py-0.5 rounded ml-1">{event.nextDateDisplay}</span>
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center text-stone-400">
+                                            <span className="mr-2 text-sm font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">{event.daysUntil} 天後</span>
+                                            <Icons.ChevronRight />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </main>
+
+                    {/* 詳細資訊 Modal */}
+                    {selectedEvent && (
+                        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" onClick={() => setSelectedEvent(null)}>
+                            <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto animate-slide-up shadow-2xl" onClick={e => e.stopPropagation()}>
+                                
+                                <div className="bg-red-600 p-6 text-white relative">
+                                    <button 
+                                        onClick={() => setSelectedEvent(null)}
+                                        className="absolute top-4 right-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition"
+                                    >
+                                        <Icons.Close />
+                                    </button>
+                                    <h2 className="text-2xl font-bold mb-1">{selectedEvent.title}</h2>
+                                    <p className="opacity-90 font-medium text-lg">
+                                        {selectedEvent.nextDate?.toLocaleDateString()} 
+                                        <span className="ml-2 text-sm bg-white/20 px-2 py-0.5 rounded">
+                                            {selectedEvent.nextDateDisplay}
+                                        </span>
+                                    </p>
+                                </div>
+
+                                <div className="p-6 space-y-6">
+                                    {/* 對象 */}
+                                    <section>
+                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
+                                            <span className="text-red-600"><Icons.User /></span> 拜拜對象
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedEvent.targets.map((t, i) => (
+                                                <span key={i} className="bg-stone-100 text-stone-700 border border-stone-200 px-3 py-1.5 rounded-full text-sm font-medium">{t}</span>
+                                            ))}
+                                        </div>
+                                    </section>
+
+                                    {/* 準備物品 */}
+                                    <section>
+                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
+                                            <span className="text-red-600"><Icons.Gift /></span> 供品準備
+                                        </h3>
+                                        <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                            {selectedEvent.items.map((item, i) => (
+                                                <li key={i} className="flex items-start gap-2 text-stone-600 text-sm">
+                                                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span>
+                                                    <span>{item}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </section>
+
+                                    {/* 紙錢 (新增區塊) */}
+                                    {selectedEvent.papers && (
+                                    <section>
+                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
+                                            <span className="text-yellow-500"><Icons.Flame /></span> 金銀紙錢
+                                        </h3>
+                                        <ul className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 space-y-2">
+                                            {selectedEvent.papers.map((paper, i) => (
+                                                <li key={i} className="text-sm text-stone-800 font-medium flex gap-2">
+                                                    <span className="text-yellow-600">●</span>
+                                                    {paper}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </section>
+                                    )}
+
+                                    {/* 注意事項 */}
+                                    <section>
+                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
+                                            <span className="text-red-600"><Icons.AlertCircle /></span> 注意事項
+                                        </h3>
+                                        <ul className="space-y-2">
+                                            {selectedEvent.notes.map((note, i) => (
+                                                <li key={i} className="text-sm text-stone-600 flex gap-2">
+                                                    <span className="font-bold text-red-400">!</span>
+                                                    {note}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </section>
+                                    
+                                    <div className="pt-2">
+                                        <button 
+                                            onClick={() => addToGoogleCalendar(selectedEvent)}
+                                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                                        >
+                                            <Icons.Bell /> 加入 Google 行事曆提醒
+                                        </button>
+                                        <p className="text-xs text-center text-stone-400 mt-2">將會自動填入所有準備細節</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
