@@ -140,26 +140,25 @@
             document.body.removeChild(link);
         };
         
-        // 計數器元件
+        // 計數器元件 (使用 CounterAPI.dev)
         const VisitorCounter = () => {
             const [count, setCount] = useState('...');
             
-            // 使用 localStorage 來簡單防止重複計數 (選擇性功能)
-            // 這裡我們每次載入都打 API，為了呈現計數器效果
             useEffect(() => {
-                // 這裡使用 CounterAPI (免費服務)
-                // Namespace 使用你的 GitHub page domain 或自訂名稱
-                // Key 使用 'baibai_helper_v1'
                 const namespace = 'freddy_baibai_helper'; 
                 const key = 'visit_count';
                 
-                fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`)
+                // 使用 counterapi.dev 的 up (increment) 端點
+                fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`)
                     .then(res => res.json())
-                    .then(data => setCount(data.value))
+                    .then(data => setCount(data.count))
                     .catch(err => {
                         console.error('Counter Error:', err);
-                        // 若 API 失敗，顯示備用方案或不顯示
-                        setCount('');
+                        // 如果 increment 失敗，嘗試直接 get
+                        fetch(`https://api.counterapi.dev/v1/${namespace}/${key}`)
+                            .then(res => res.json())
+                            .then(data => setCount(data.count))
+                            .catch(e => setCount(''));
                     });
             }, []);
             
