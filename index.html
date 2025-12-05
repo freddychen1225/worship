@@ -2,9 +2,17 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>拜拜小幫手 (BaiBai Note)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>拜拜小幫手</title>
     
+    <!-- PWA 設定 -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#b91c1c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <!-- 核心函式庫 -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -12,21 +20,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lunar-javascript/lunar.js"></script>
 
-    <!-- 字型與樣式 -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; }
+        body { font-family: 'Noto Sans TC', sans-serif; overscroll-behavior-y: none; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
         
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .animate-slide-up {
-            animation: slideUp 0.3s ease-out forwards;
-        }
+        /* 隱藏捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-stone-100 text-stone-800">
+<body class="bg-stone-100 text-stone-800 select-none">
 
     <div id="root"></div>
 
@@ -46,137 +51,24 @@
             Flame: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
         };
 
-        // ==========================================
-        // 資料庫
-        // ==========================================
         const WORSHIP_DATA = [
-            { 
-                id: 'cny_eve', 
-                title: '除夕 - 祭祖與地基主', 
-                type: 'yearly', 
-                lunarMonth: 12, 
-                lunarDay: 29, 
-                targets: ['祖先', '地基主'], 
-                items: ['三牲', '年糕', '發糕', '水果'], 
-                papers: ['刈金 (四方金) - 拜祖先', '銀紙 (大銀/小銀) - 拜祖先', '刈金 (四方金) - 拜地基主'],
-                notes: ['除夕需在傍晚前拜完', '地基主在廚房往內拜', '地基主不可用神明的壽金'] 
-            },
-            { 
-                id: 'cny_01', 
-                title: '大年初一 - 走春拜天公', 
-                type: 'yearly', 
-                lunarMonth: 1, 
-                lunarDay: 1, 
-                targets: ['玉皇大帝', '神明'], 
-                items: ['素果', '年糕', '甜茶'], 
-                papers: ['天公金 (大百壽金)', '壽金', '補運金'],
-                notes: ['忌殺生，建議全素', '早上越早拜越好'] 
-            },
-            { 
-                id: 'cny_05', 
-                title: '大年初五 - 開工迎財神', 
-                type: 'yearly', 
-                lunarMonth: 1, 
-                lunarDay: 5, 
-                targets: ['五路財神', '土地公'], 
-                items: ['甜食', '發糕', '水果'], 
-                papers: ['四色金 (壽金/刈金/福金/大百壽金)', '甲馬 (供神兵神將)'],
-                notes: ['放鞭炮迎財神', '將過年垃圾倒掉(送窮)'] 
-            },
-            { 
-                id: 'tomb', 
-                title: '清明節 - 掃墓祭祖', 
-                type: 'solar_term', 
-                targets: ['祖先', '后土 (土地公)'], 
-                items: ['潤餅', '草仔粿', '紅龜粿', '三牲'], 
-                papers: ['壽金/福金 (拜后土)', '刈金/銀紙 (拜祖先)', '五色紙 (壓墓紙用)'],
-                notes: ['掛紙(壓墓紙)象徵修繕房舍', '祭拜後分享供品'] 
-            },
-            { 
-                id: 'dragon', 
-                title: '端午節 - 祭祖地基主', 
-                type: 'yearly', 
-                lunarMonth: 5, 
-                lunarDay: 5, 
-                targets: ['祖先', '地基主'], 
-                items: ['粽子', '水果', '雄黃酒'], 
-                papers: ['刈金 (四方金)', '銀紙 (大銀/小銀)'],
-                notes: ['門口掛艾草', '取午時水'] 
-            },
-            { 
-                id: 'qixi', 
-                title: '七夕 - 七娘媽生 (做十六歲)', 
-                type: 'yearly', 
-                lunarMonth: 7, 
-                lunarDay: 7, 
-                targets: ['七娘媽', '床母', '織女'], 
-                items: ['麻油雞酒', '油飯', '圓仔花', '化妝品 (胭脂/水粉/圓鏡)'], 
-                papers: ['壽金', '刈金', '七娘媽衣 (婆姐衣)', '床母衣'],
-                notes: ['傍晚 (17:00-19:00) 祭拜最佳', '拜完化妝品一半丟高處給神明，一半留給女孩用', '家有16歲子女可做十六歲成年禮'] 
-            },
-            { 
-                id: 'ghost', 
-                title: '中元普渡', 
-                type: 'yearly', 
-                lunarMonth: 7, 
-                lunarDay: 15, 
-                targets: ['普渡公', '好兄弟'], 
-                items: ['三牲', '臉盆毛巾', '乖乖', '水果'], 
-                papers: ['普渡公金', '更衣 (經衣)', '銀紙 (小銀)'],
-                notes: ['不可說名字', '在戶外拜', '先燒經衣(給好兄弟梳洗)再燒小銀', '避開香蕉李子梨子(招你來)'] 
-            },
-            { 
-                id: 'moon', 
-                title: '中秋節 - 土地公與祖先', 
-                type: 'yearly', 
-                lunarMonth: 8, 
-                lunarDay: 15, 
-                targets: ['土地公', '祖先', '月亮'], 
-                items: ['月餅', '柚子', '麻糬 (黏錢)'], 
-                papers: ['【拜土地公】四色金 (壽金/刈金/福金/大百壽金)', '【拜祖先】刈金 (四方金) + 銀紙 (大銀)'],
-                notes: ['求人緣、求子', '土地公需準備四色金，祖先用刈金與銀紙，不可混用'] 
-            },
-            { 
-                id: 'double9', 
-                title: '重陽節 - 敬老祭祖', 
-                type: 'yearly', 
-                lunarMonth: 9, 
-                lunarDay: 9, 
-                targets: ['祖先', '地基主'], 
-                items: ['重陽糕', '菊花酒', '三牲'], 
-                papers: ['刈金', '大銀', '小銀'],
-                notes: ['祭祖四大節日之一'] 
-            },
-            { 
-                id: 'm1_15', 
-                title: '初一/十五 - 拜神祭祖', 
-                type: 'monthly', 
-                days: [1, 15], 
-                targets: ['神明', '祖先'], 
-                items: ['水果 (單數)', '清茶'], 
-                papers: ['【神明】壽金/天公金', '【祖先】刈金/銀紙'],
-                notes: ['上午吉時最佳'] 
-            },
-            { 
-                id: 'm2_16', 
-                title: '初二/十六 - 做牙 (拜土地公)', 
-                type: 'monthly', 
-                days: [2, 16], 
-                targets: ['土地公'], 
-                items: ['麻糬', '花生', '酒'], 
-                papers: ['四色金 (壽金/刈金/福金/大百壽金)'],
-                notes: ['頭牙(2/2)', '尾牙(12/16)需隆重', '福金是土地公專用金紙'] 
-            }
+            { id: 'cny_eve', title: '除夕 - 祭祖與地基主', type: 'yearly', lunarMonth: 12, lunarDay: 29, targets: ['祖先', '地基主'], items: ['三牲', '年糕', '發糕', '水果'], papers: ['刈金 (四方金) - 拜祖先', '銀紙 (大銀/小銀) - 拜祖先', '刈金 (四方金) - 拜地基主'], notes: ['除夕需在傍晚前拜完', '地基主在廚房往內拜', '地基主不可用神明的壽金'] },
+            { id: 'cny_01', title: '大年初一 - 走春拜天公', type: 'yearly', lunarMonth: 1, lunarDay: 1, targets: ['玉皇大帝', '神明'], items: ['素果', '年糕', '甜茶'], papers: ['天公金 (大百壽金)', '壽金', '補運金'], notes: ['忌殺生，建議全素', '早上越早拜越好'] },
+            { id: 'cny_05', title: '大年初五 - 開工迎財神', type: 'yearly', lunarMonth: 1, lunarDay: 5, targets: ['五路財神', '土地公'], items: ['甜食', '發糕', '水果'], papers: ['四色金 (壽金/刈金/福金/大百壽金)', '甲馬 (供神兵神將)'], notes: ['放鞭炮迎財神', '將過年垃圾倒掉(送窮)'] },
+            { id: 'tomb', title: '清明節 - 掃墓祭祖', type: 'solar_term', targets: ['祖先', '后土 (土地公)'], items: ['潤餅', '草仔粿', '紅龜粿', '三牲'], papers: ['壽金/福金 (拜后土)', '刈金/銀紙 (拜祖先)', '五色紙 (壓墓紙用)'], notes: ['掛紙(壓墓紙)象徵修繕房舍', '祭拜後分享供品'] },
+            { id: 'dragon', title: '端午節 - 祭祖地基主', type: 'yearly', lunarMonth: 5, lunarDay: 5, targets: ['祖先', '地基主'], items: ['粽子', '水果', '雄黃酒'], papers: ['刈金 (四方金)', '銀紙 (大銀/小銀)'], notes: ['門口掛艾草', '取午時水'] },
+            { id: 'qixi', title: '七夕 - 七娘媽生 (做十六歲)', type: 'yearly', lunarMonth: 7, lunarDay: 7, targets: ['七娘媽', '床母', '織女'], items: ['麻油雞酒', '油飯', '圓仔花', '化妝品 (胭脂/水粉/圓鏡)'], papers: ['壽金', '刈金', '七娘媽衣 (婆姐衣)', '床母衣'], notes: ['傍晚 (17:00-19:00) 祭拜最佳', '拜完化妝品一半丟高處給神明，一半留給女孩用', '家有16歲子女可做十六歲成年禮'] },
+            { id: 'ghost', title: '中元普渡', type: 'yearly', lunarMonth: 7, lunarDay: 15, targets: ['普渡公', '好兄弟'], items: ['三牲', '臉盆毛巾', '乖乖', '水果'], papers: ['普渡公金', '更衣 (經衣)', '銀紙 (小銀)'], notes: ['不可說名字', '在戶外拜', '先燒經衣(給好兄弟梳洗)再燒小銀', '避開香蕉李子梨子(招你來)'] },
+            { id: 'moon', title: '中秋節 - 土地公與祖先', type: 'yearly', lunarMonth: 8, lunarDay: 15, targets: ['土地公', '祖先', '月亮'], items: ['月餅', '柚子', '麻糬 (黏錢)'], papers: ['【拜土地公】四色金 (壽金/刈金/福金/大百壽金)', '【拜祖先】刈金 (四方金) + 銀紙 (大銀)'], notes: ['求人緣、求子', '土地公需準備四色金，祖先用刈金與銀紙，不可混用'] },
+            { id: 'double9', title: '重陽節 - 敬老祭祖', type: 'yearly', lunarMonth: 9, lunarDay: 9, targets: ['祖先', '地基主'], items: ['重陽糕', '菊花酒', '三牲'], papers: ['刈金', '大銀', '小銀'], notes: ['祭祖四大節日之一'] },
+            { id: 'm1_15', title: '初一/十五 - 拜神祭祖', type: 'monthly', days: [1, 15], targets: ['神明', '祖先'], items: ['水果 (單數)', '清茶'], papers: ['【神明】壽金/天公金', '【祖先】刈金/銀紙'], notes: ['上午吉時最佳'] },
+            { id: 'm2_16', title: '初二/十六 - 做牙 (拜土地公)', type: 'monthly', days: [2, 16], targets: ['土地公'], items: ['麻糬', '花生', '酒'], papers: ['四色金 (壽金/刈金/福金/大百壽金)'], notes: ['頭牙(2/2)', '尾牙(12/16)需隆重', '福金是土地公專用金紙'] }
         ];
 
-        // ==========================================
-        // 邏輯層
-        // ==========================================
         const getNextWorshipDate = (event) => {
             const now = new Date();
             const Lunar = window.Lunar; 
             let candidates = [];
-
             if (event.type === 'monthly') {
                 const todayLunar = Lunar.fromDate(now);
                 const nextMonthLunar = todayLunar.next(35); 
@@ -186,14 +78,11 @@
                             let targetLunar = Lunar.fromYmd(baseLunar.getYear(), baseLunar.getMonth(), day);
                             const solar = targetLunar.getSolar();
                             const dateObj = new Date(solar.getYear(), solar.getMonth() - 1, solar.getDay());
-                            if (dateObj >= now) { 
-                                candidates.push({ date: dateObj, display: `農曆 ${targetLunar.getMonth()}月${targetLunar.getDay()}日` });
-                            }
+                            if (dateObj >= now) { candidates.push({ date: dateObj, display: `農曆 ${targetLunar.getMonth()}月${targetLunar.getDay()}日` }); }
                         } catch(e) {}
                     });
                 });
-            } 
-            else if (event.type === 'yearly') {
+            } else if (event.type === 'yearly') {
                 const currentYear = now.getFullYear();
                 [currentYear, currentYear + 1].forEach(year => {
                     let tempLunar = Lunar.fromDate(new Date(year, 5, 1));
@@ -202,24 +91,18 @@
                         let lunarDate = Lunar.fromYmd(targetLunarYear, event.lunarMonth, event.lunarDay);
                         let solar = lunarDate.getSolar();
                         let dateObj = new Date(solar.getYear(), solar.getMonth() - 1, solar.getDay());
-                        if (dateObj >= now) {
-                             candidates.push({ date: dateObj, display: `農曆 ${event.lunarMonth}月${event.lunarDay}日` });
-                        }
+                        if (dateObj >= now) { candidates.push({ date: dateObj, display: `農曆 ${event.lunarMonth}月${event.lunarDay}日` }); }
                     } catch (e) {
-                        if (event.lunarDay === 30) {
-                             try { let lunarDate = Lunar.fromYmd(targetLunarYear, 12, 29); } catch(ex){}
-                        }
+                        if (event.lunarDay === 30) { try { let lunarDate = Lunar.fromYmd(targetLunarYear, 12, 29); } catch(ex){} }
                     }
                 });
-            }
-            else if (event.type === 'solar_term') {
+            } else if (event.type === 'solar_term') {
                  const currentYear = now.getFullYear();
                  [currentYear, currentYear + 1].forEach(year => {
                      let d = new Date(year, 3, 5); 
                      if (d >= now) { candidates.push({ date: d, display: '節氣：清明' }); }
                  });
             }
-
             candidates.sort((a, b) => a.date - b.date);
             return candidates.length > 0 ? candidates[0] : null;
         };
@@ -248,9 +131,6 @@
             window.open(url, '_blank');
         };
 
-        // ==========================================
-        // 主程式
-        // ==========================================
         function App() {
             const [events, setEvents] = useState([]);
             const [selectedEvent, setSelectedEvent] = useState(null);
@@ -283,16 +163,12 @@
                     </header>
 
                     <main className="max-w-md mx-auto p-4 space-y-6 flex-grow w-full">
-                        
-                        {/* 免責聲明 */}
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
                              <div className="text-yellow-600 mt-0.5"><Icons.AlertCircle /></div>
                              <p className="text-sm text-yellow-800 font-medium">
                                 拜拜細節請依自身習慣做準備，本頁面資訊僅供參考。
                              </p>
                         </div>
-
-                        {/* 重點卡片 */}
                         {events.length > 0 && (
                             <div className="bg-white rounded-xl shadow-lg overflow-hidden border-l-4 border-red-600 transform transition hover:scale-[1.02] duration-200">
                                 <div className="p-5">
@@ -306,35 +182,22 @@
                                     <p className="text-stone-500 font-medium">
                                         {events[0].nextDate?.toLocaleDateString()} ({events[0].nextDateDisplay})
                                     </p>
-                                    
                                     <div className="mt-4 grid grid-cols-2 gap-3">
-                                        <button 
-                                            onClick={() => setSelectedEvent(events[0])}
-                                            className="flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 rounded-lg hover:bg-red-700 active:bg-red-800 transition font-medium shadow-sm"
-                                        >
+                                        <button onClick={() => setSelectedEvent(events[0])} className="flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 rounded-lg hover:bg-red-700 transition font-medium shadow-sm">
                                             <Icons.Info /> 查看細節
                                         </button>
-                                        <button 
-                                            onClick={() => addToGoogleCalendar(events[0])}
-                                            className="flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 py-2.5 rounded-lg hover:bg-blue-100 transition font-medium shadow-sm"
-                                        >
+                                        <button onClick={() => addToGoogleCalendar(events[0])} className="flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 py-2.5 rounded-lg hover:bg-blue-100 transition font-medium shadow-sm">
                                             <Icons.Bell /> 行事曆
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         )}
-
-                        {/* 列表區 */}
                         <div>
                             <h3 className="text-lg font-bold mb-3 text-stone-700 pl-1 border-l-4 border-stone-300 leading-none ml-1">接下來的日子</h3>
                             <div className="space-y-3">
                                 {events.slice(1).map(event => (
-                                    <div 
-                                        key={event.id} 
-                                        onClick={() => setSelectedEvent(event)}
-                                        className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer flex justify-between items-center active:bg-stone-50 border border-transparent hover:border-red-100"
-                                    >
+                                    <div key={event.id} onClick={() => setSelectedEvent(event)} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer flex justify-between items-center active:bg-stone-50 border border-transparent hover:border-red-100">
                                         <div>
                                             <h4 className="font-bold text-gray-800">{event.title}</h4>
                                             <p className="text-sm text-stone-500 mt-1">
@@ -351,98 +214,26 @@
                         </div>
                     </main>
                     
-                    {/* 頁尾 (單行設計) */}
                     <footer className="text-center py-6 text-sm text-stone-500 font-medium">
                         <p>
                             <a href="https://www.threads.com/@freddychen1225" target="_blank" rel="noreferrer" className="underline hover:text-stone-800 transition">Freddy</a> & Gemini 3 Pro 設計協作
                         </p>
                     </footer>
 
-                    {/* 詳細資訊 Modal */}
                     {selectedEvent && (
                         <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" onClick={() => setSelectedEvent(null)}>
                             <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto animate-slide-up shadow-2xl" onClick={e => e.stopPropagation()}>
-                                
                                 <div className="bg-red-600 p-6 text-white relative">
-                                    <button 
-                                        onClick={() => setSelectedEvent(null)}
-                                        className="absolute top-4 right-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition"
-                                    >
-                                        <Icons.Close />
-                                    </button>
+                                    <button onClick={() => setSelectedEvent(null)} className="absolute top-4 right-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition"><Icons.Close /></button>
                                     <h2 className="text-2xl font-bold mb-1">{selectedEvent.title}</h2>
-                                    <p className="opacity-90 font-medium text-lg">
-                                        {selectedEvent.nextDate?.toLocaleDateString()} 
-                                        <span className="ml-2 text-sm bg-white/20 px-2 py-0.5 rounded">
-                                            {selectedEvent.nextDateDisplay}
-                                        </span>
-                                    </p>
+                                    <p className="opacity-90 font-medium text-lg">{selectedEvent.nextDate?.toLocaleDateString()} <span className="ml-2 text-sm bg-white/20 px-2 py-0.5 rounded">{selectedEvent.nextDateDisplay}</span></p>
                                 </div>
-
                                 <div className="p-6 space-y-6">
-                                    <section>
-                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
-                                            <span className="text-red-600"><Icons.User /></span> 拜拜對象
-                                        </h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {selectedEvent.targets.map((t, i) => (
-                                                <span key={i} className="bg-stone-100 text-stone-700 border border-stone-200 px-3 py-1.5 rounded-full text-sm font-medium">{t}</span>
-                                            ))}
-                                        </div>
-                                    </section>
-
-                                    <section>
-                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
-                                            <span className="text-red-600"><Icons.Gift /></span> 供品準備
-                                        </h3>
-                                        <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                            {selectedEvent.items.map((item, i) => (
-                                                <li key={i} className="flex items-start gap-2 text-stone-600 text-sm">
-                                                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span>
-                                                    <span>{item}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </section>
-
-                                    {selectedEvent.papers && (
-                                    <section>
-                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
-                                            <span className="text-yellow-500"><Icons.Flame /></span> 金銀紙錢
-                                        </h3>
-                                        <ul className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 space-y-2">
-                                            {selectedEvent.papers.map((paper, i) => (
-                                                <li key={i} className="text-sm text-stone-800 font-medium flex gap-2">
-                                                    <span className="text-yellow-600">●</span>
-                                                    {paper}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </section>
-                                    )}
-
-                                    <section>
-                                        <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2">
-                                            <span className="text-red-600"><Icons.AlertCircle /></span> 注意事項
-                                        </h3>
-                                        <ul className="space-y-2">
-                                            {selectedEvent.notes.map((note, i) => (
-                                                <li key={i} className="text-sm text-stone-600 flex gap-2">
-                                                    <span className="font-bold text-red-400">!</span>
-                                                    {note}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </section>
-                                    
-                                    <div className="pt-2">
-                                        <button 
-                                            onClick={() => addToGoogleCalendar(selectedEvent)}
-                                            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                                        >
-                                            <Icons.Bell /> 加入 Google 行事曆提醒
-                                        </button>
-                                    </div>
+                                    <section><h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2"><span className="text-red-600"><Icons.User /></span> 拜拜對象</h3><div className="flex flex-wrap gap-2">{selectedEvent.targets.map((t, i) => (<span key={i} className="bg-stone-100 text-stone-700 border border-stone-200 px-3 py-1.5 rounded-full text-sm font-medium">{t}</span>))}</div></section>
+                                    <section><h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2"><span className="text-red-600"><Icons.Gift /></span> 供品準備</h3><ul className="grid grid-cols-2 gap-x-4 gap-y-2">{selectedEvent.items.map((item, i) => (<li key={i} className="flex items-start gap-2 text-stone-600 text-sm"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span><span>{item}</span></li>))}</ul></section>
+                                    {selectedEvent.papers && (<section><h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2"><span className="text-yellow-500"><Icons.Flame /></span> 金銀紙錢</h3><ul className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 space-y-2">{selectedEvent.papers.map((paper, i) => (<li key={i} className="text-sm text-stone-800 font-medium flex gap-2"><span className="text-yellow-600">●</span>{paper}</li>))}</ul></section>)}
+                                    <section><h3 className="flex items-center gap-2 font-bold text-gray-900 mb-3 text-lg border-b pb-2"><span className="text-red-600"><Icons.AlertCircle /></span> 注意事項</h3><ul className="space-y-2">{selectedEvent.notes.map((note, i) => (<li key={i} className="text-sm text-stone-600 flex gap-2"><span className="font-bold text-red-400">!</span>{note}</li>))}</ul></section>
+                                    <div className="pt-2"><button onClick={() => addToGoogleCalendar(selectedEvent)} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition flex items-center justify-center gap-2"><Icons.Bell /> 加入 Google 行事曆提醒</button></div>
                                 </div>
                             </div>
                         </div>
@@ -450,9 +241,15 @@
                 </div>
             );
         }
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+        
+        // 註冊 Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registered!', reg))
+                .catch(err => console.log('SW failed', err));
+        }
     </script>
 </body>
 </html>
