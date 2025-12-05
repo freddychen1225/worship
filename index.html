@@ -48,7 +48,8 @@
             Gift: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>,
             AlertCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">ircle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>,
             Close: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 12"/></svg>,
-            Flame: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            Flame: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>,
+            Eye: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>ircle cx="12" cy="12" r="3"/></svg>
         };
 
         const WORSHIP_DATA = [
@@ -127,8 +128,49 @@
             const month = String(event.nextDate.getMonth() + 1).padStart(2, '0');
             const day = String(event.nextDate.getDate()).padStart(2, '0');
             const dateStr = `${year}${month}${day}`;
+            
             const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}&location=${location}`;
-            window.open(url, '_blank');
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+        
+        // 計數器元件
+        const VisitorCounter = () => {
+            const [count, setCount] = useState('...');
+            
+            // 使用 localStorage 來簡單防止重複計數 (選擇性功能)
+            // 這裡我們每次載入都打 API，為了呈現計數器效果
+            useEffect(() => {
+                // 這裡使用 CounterAPI (免費服務)
+                // Namespace 使用你的 GitHub page domain 或自訂名稱
+                // Key 使用 'baibai_helper_v1'
+                const namespace = 'freddy_baibai_helper'; 
+                const key = 'visit_count';
+                
+                fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`)
+                    .then(res => res.json())
+                    .then(data => setCount(data.value))
+                    .catch(err => {
+                        console.error('Counter Error:', err);
+                        // 若 API 失敗，顯示備用方案或不顯示
+                        setCount('');
+                    });
+            }, []);
+            
+            if (count === '') return null;
+
+            return (
+                <div className="flex items-center justify-center gap-1 text-xs text-stone-400 mb-2">
+                    <Icons.Eye />
+                    <span>已累積 {count} 次祈福查詢</span>
+                </div>
+            );
         };
 
         function App() {
@@ -215,6 +257,8 @@
                     </main>
                     
                     <footer className="text-center py-6 text-sm text-stone-500 font-medium">
+                        {/* 插入計數器 */}
+                        <VisitorCounter />
                         <p>
                             <a href="https://www.threads.com/@freddychen1225" target="_blank" rel="noreferrer" className="underline hover:text-stone-800 transition">Freddy</a> & Gemini 3 Pro 設計協作
                         </p>
