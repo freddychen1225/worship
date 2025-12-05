@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>拜拜小幫手 V2.1 (BaiBai Note)</title>
+    <title>拜拜小幫手 (BaiBai Note)</title>
     
     <!-- 核心函式庫 -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -284,7 +284,7 @@
 
                     <main className="max-w-md mx-auto p-4 space-y-6 flex-grow w-full">
                         
-                        {/* 免責聲明 (新加入) */}
+                        {/* 免責聲明 */}
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
                              <div className="text-yellow-600 mt-0.5"><Icons.AlertCircle /></div>
                              <p className="text-sm text-yellow-800 font-medium">
@@ -351,17 +351,11 @@
                         </div>
                     </main>
                     
-                    {/* 頁尾 (新加入) */}
-                    <footer className="text-center py-6 text-xs text-stone-400">
-                        <p>Freddy & Gemini 3 Pro 設計協作</p>
-                        <a 
-                            href="https://www.threads.com/@freddychen1225" 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="inline-block mt-1 underline hover:text-stone-600 transition"
-                        >
-                            Freddy
-                        </a>
+                    {/* 頁尾 (單行設計) */}
+                    <footer className="text-center py-6 text-sm text-stone-500 font-medium">
+                        <p>
+                            <a href="https://www.threads.com/@freddychen1225" target="_blank" rel="noreferrer" className="underline hover:text-stone-800 transition">Freddy</a> & Gemini 3 Pro 設計協作
+                        </p>
                     </footer>
 
                     {/* 詳細資訊 Modal */}
