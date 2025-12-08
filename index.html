@@ -38,13 +38,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // SVG Icons
+        // SVG Icons (確認所有標籤拼字正確)
         const Icons = {
             Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
             Info: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">ircle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>,
             ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
             Bell: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>,
-            User: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><rcle cx="12" cy="7" r="4"/></svg>,
+            User: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>ircle cx="12" cy="7" r="4"/></svg>,
             Gift: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>,
             AlertCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">ircle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>,
             Close: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 12"/></svg>,
@@ -56,10 +56,7 @@
             { id: 'cny_eve', title: '除夕 - 祭祖與地基主', type: 'yearly', lunarMonth: 12, lunarDay: 29, targets: ['祖先', '地基主'], items: ['三牲', '年糕', '發糕', '水果'], papers: ['刈金 (四方金) - 拜祖先', '銀紙 (大銀/小銀) - 拜祖先', '刈金 (四方金) - 拜地基主'], notes: ['除夕需在傍晚前拜完', '地基主在廚房往內拜', '地基主不可用神明的壽金'] },
             { id: 'cny_01', title: '大年初一 - 走春拜天公', type: 'yearly', lunarMonth: 1, lunarDay: 1, targets: ['玉皇大帝', '神明'], items: ['素果', '年糕', '甜茶'], papers: ['天公金 (大百壽金)', '壽金', '補運金'], notes: ['忌殺生，建議全素', '早上越早拜越好'] },
             { id: 'cny_05', title: '大年初五 - 開工迎財神', type: 'yearly', lunarMonth: 1, lunarDay: 5, targets: ['五路財神', '土地公'], items: ['甜食', '發糕', '水果'], papers: ['四色金 (壽金/刈金/福金/大百壽金)', '甲馬 (供神兵神將)'], notes: ['放鞭炮迎財神', '將過年垃圾倒掉(送窮)'] },
-            
-            // 新增：初九天公生
             { id: 'cny_09', title: '大年初九 - 天公生 (玉皇大帝)', type: 'yearly', lunarMonth: 1, lunarDay: 9, targets: ['玉皇大帝'], items: ['五果 (柑/橘/蘋果等)', '甜料 (生仁/冬瓜糖)', '紅龜粿', '發糕'], papers: ['天公金 (大百壽金)', '壽金', '刈金', '福金'], notes: ['初八晚上11點(子時)即可開始拜', '忌曬女性內衣褲', '不可口出穢言'] },
-
             { id: 'tomb', title: '清明節 - 掃墓祭祖', type: 'solar_term', targets: ['祖先', '后土 (土地公)'], items: ['潤餅', '草仔粿', '紅龜粿', '三牲'], papers: ['壽金/福金 (拜后土)', '刈金/銀紙 (拜祖先)', '五色紙 (壓墓紙用)'], notes: ['掛紙(壓墓紙)象徵修繕房舍', '祭拜後分享供品'] },
             { id: 'dragon', title: '端午節 - 祭祖地基主', type: 'yearly', lunarMonth: 5, lunarDay: 5, targets: ['祖先', '地基主'], items: ['粽子', '水果', '雄黃酒'], papers: ['刈金 (四方金)', '銀紙 (大銀/小銀)'], notes: ['門口掛艾草', '取午時水'] },
             { id: 'qixi', title: '七夕 - 七娘媽生 (做十六歲)', type: 'yearly', lunarMonth: 7, lunarDay: 7, targets: ['七娘媽', '床母', '織女'], items: ['麻油雞酒', '油飯', '圓仔花', '化妝品 (胭脂/水粉/圓鏡)'], papers: ['壽金', '刈金', '七娘媽衣 (婆姐衣)', '床母衣'], notes: ['傍晚 (17:00-19:00) 祭拜最佳', '拜完化妝品一半丟高處給神明，一半留給女孩用', '家有16歲子女可做十六歲成年禮'] },
@@ -144,7 +141,7 @@
             document.body.removeChild(link);
         };
         
-        // 計數器元件 (使用 CounterAPI.dev)
+        // 計數器元件
         const VisitorCounter = () => {
             const [count, setCount] = useState('...');
             
@@ -152,13 +149,11 @@
                 const namespace = 'freddy_baibai_helper'; 
                 const key = 'visit_count';
                 
-                // 使用 counterapi.dev 的 up (increment) 端點
                 fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`)
                     .then(res => res.json())
                     .then(data => setCount(data.count))
                     .catch(err => {
                         console.error('Counter Error:', err);
-                        // 如果 increment 失敗，嘗試直接 get
                         fetch(`https://api.counterapi.dev/v1/${namespace}/${key}`)
                             .then(res => res.json())
                             .then(data => setCount(data.count))
@@ -260,7 +255,6 @@
                     </main>
                     
                     <footer className="text-center py-6 text-sm text-stone-500 font-medium">
-                        {/* 插入計數器 */}
                         <VisitorCounter />
                         <p>
                             <a href="https://www.threads.com/@freddychen1225" target="_blank" rel="noreferrer" className="underline hover:text-stone-800 transition">Freddy</a> & Gemini 3 Pro 設計協作
